@@ -1,0 +1,259 @@
+# This file contains the default values for the Bitnami Nginx Chart.
+# You can modify this file and use it with `helm upgrade` to customize your Nginx deployment.
+
+# To get this file:
+# helm show values bitnami/nginx > nginx-values.yaml
+
+# Example modification: Change the replicaCount to 2
+replicaCount: 1 # Change this to 2 when you follow the upgrade example
+
+image:
+  registry: docker.io
+  repository: bitnami/nginx
+  tag: 1.25.1-debian-11-r0 # Check latest tag on Bitnami charts repo
+  pullPolicy: IfNotPresent
+  # pullSecrets:
+  #   - myRegistryKeySecretName
+
+hostAliases: []
+# - ip: "10.0.0.1"
+#   hostnames:
+#   - "example.com"
+#   - "www.example.com"
+
+containerPorts:
+  http: 80
+  https: 443
+
+service:
+  type: LoadBalancer
+  ports:
+    http: 80
+    https: 443
+  # nodePorts:
+  #   http: ""
+  #   https: ""
+  annotations: {}
+  loadBalancerIP: ""
+  clusterIP: ""
+  externalTrafficPolicy: Cluster
+  # You can uncomment and set loadBalancerSourceRanges to restrict access
+  # loadBalancerSourceRanges:
+  #   - 10.0.0.0/24
+
+ingress:
+  enabled: false
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+  #   kubernetes.io/tls-acme: "true"
+  # hostname: nginx.local
+  # tls:
+  #   - secretName: nginx-tls
+  #     hosts:
+  #       - nginx.local
+  # extraHosts: []
+  # - name: host.local
+  #   path: /
+  # existingSecret: ""
+  # Path for the NGINX configuration
+  path: /
+  # Set to true to create an ingress with a rewrite-target annotation
+  # pathType: ImplementationSpecific
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    namespace: ""
+  prometheusRule:
+    enabled: false
+    additionalLabels: {}
+    namespace: ""
+    rules: []
+
+resources:
+  limits: {}
+  requests: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 1
+  periodSeconds: 1
+  timeoutSeconds: 1
+  failureThreshold: 1
+  successThreshold: 1
+
+volumePermissions:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/kubectl
+    tag: 1.26.10-debian-11-r0
+    pullPolicy: IfNotPresent
+  # pullSecrets:
+  #   - myRegistryKeySecretName
+
+networkPolicy:
+  enabled: false
+  # ingress:
+  #   from:
+  #     - podSelector:
+  #         matchLabels:
+  #           app.kubernetes.io/name: my-client
+
+hostNetwork: false
+dnsPolicy: ClusterFirst
+dnsConfig: {}
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate: {}
+
+schedulerName: ""
+# affinity: {}
+# nodeSelector: {}
+# tolerations: []
+
+priorityClassName: ""
+
+automountServiceAccountToken: true
+serviceAccount:
+  create: true
+  name: ""
+  # annotations: {}
+
+rbac:
+  create: true
+  # rule:
+  #   - apiGroups: [""]
+  #     resources: ["pods"]
+  #     verbs: ["get", "list"]
+
+customAnnotations: {}
+customLabels: {}
+# For example:
+# customLabels:
+#   my/label: custom
+
+# PDB (Pod Disruption Budget) config
+podDisruptionBudget:
+  enabled: false
+  minAvailable: ""
+  maxUnavailable: ""
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+  runAsUser: 1001
+
+containerSecurityContext:
+  enabled: true
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  # readOnlyRootFilesystem: true
+  # capabilities:
+  #   drop:
+  #   - ALL
+
+configuration: |
+  events {
+      worker_connections  1024;
+  }
+  http {
+      include       /etc/nginx/mime.types;
+      default_type  application/octet-stream;
+      sendfile        on;
+      keepalive_timeout  65;
+      server {
+          listen {{ .Values.service.ports.http }};
+          location / {
+              root   /app;
+              index  index.html index.htm;
+          }
+      }
+  }
+
+# List of secrets that will be mounted as files into the /etc/nginx/secrets directory.
+extraSecrets: []
+# - existingSecret: ""
+# - existingSecret: ""
+
+# List of configmaps that will be mounted as files into the /etc/nginx/configmaps directory.
+extraConfigMaps: []
+# - existingConfigMap: ""
+# - existingConfigMap: ""
+
+# List of external volumes that can be mounted in the deployment.
+extraVolumes: []
+# - name: my-volume
+#   configMap:
+#     name: my-configmap
+
+# List of extra volume mounts for the container.
+extraVolumeMounts: []
+# - name: my-volume
+#   mountPath: /opt/bitnami/nginx/my-volume
+
+# Add additional init containers to the deployment
+extraInitContainers: []
+# - name: my-init-container
+#   image: my-repo/my-image:latest
+#   command: ["sh", "-c", "echo 'Hello from init container'"]
+
+# Add additional containers to the deployment
+extraContainers: []
+# - name: my-sidecar-container
+#   image: my-repo/my-image:latest
+#   command: ["sh", "-c", "echo 'Hello from sidecar'"]
+
+# Add extra environment variables
+extraEnvVars: []
+# - name: FOO
+#   value: "bar"
+
+# Add extra environment variables from secrets or configmaps
+extraEnvVarsCM: []
+# - my-configmap
+extraEnvVarsSecret: []
+# - my-secret
+
+# Configure the NGINX logs
+logs:
+  access: /dev/stdout
+  error: /dev/stderr
+
+# Configure custom NGINX snippets
+# For example:
+# customHttpBlock: |-
+#   server {
+#     listen 81;
+#     location / {
+#       return 200 'Hello from custom http block';
+#     }
+#   }
+customHttpBlock: ""
+customStreamBlock: ""
+customEventsBlock: ""
